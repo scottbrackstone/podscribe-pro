@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+venv_win/
+.venv/
+backend/venv/
+backend/venv_win/
+
+# Environment and local data
+.env
+*.env
+backend/.env
+data/
+
+# Local editor and agent state
+.vscode/
+.agents/
+.codegraph/
+skills-lock.json
+
+# JavaScript dependencies/build output
+node_modules/
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db

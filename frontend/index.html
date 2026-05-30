@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PodScribe Pro</title>
+    <link rel="stylesheet" href="/static/style.css?v=4" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+</head>
+<body>
+    <div class="container">
+
+        <h1>PodScribe Pro</h1>
+        <p class="subtitle">Paste your podcast transcript below and get an AI summary instantly.</p>
+
+        <textarea id="transcript" placeholder="Paste your transcript here..."></textarea>
+
+        <select id="style">
+            <option value="concise" title="3-5 sentences. The quick gist for when you only have 30 seconds.">Concise</option>
+            <option value="detailed" title="Full breakdown of every major point with context and detail.">Detailed</option>
+            <option value="takeaways" title="Actionable insights and key lessons worth remembering from this episode.">Key Takeaways</option>
+        </select>
+
+        <button id="summarise-btn">Summarise</button>
+        <button id="stop-btn" disabled>Stop</button>
+
+        <div id="result">
+            <h2>Summary</h2>
+            <p id="summary-text">Your summary will appear here.</p>
+            <p id="word-count"></p>
+        </div>
+
+        <!-- ClipWise Section -->
+        <div id="clipwise" style="display:none;">
+            <h2>ClipWise <span class="beta-tag">BETA</span></h2>
+            <p class="subtitle">Turn this into posts that sound like you learning in public.</p>
+
+            <div class="tone-slider-wrap">
+                <div class="tone-labels">
+                    <span>Quiet</span>
+                    <span>Curious</span>
+                    <span>Builder</span>
+                    <span>Connect</span>
+                    <span>Opinion</span>
+                </div>
+                <input type="range" id="approach-slider" min="0" max="4" step="1" value="1" />
+            </div>
+
+            <div class="clipwise-buttons">
+                <button class="clip-btn" id="clip-all">Generate All</button>
+                <button class="clip-btn" id="clip-x">X</button>
+                <button class="clip-btn" id="clip-threads">Threads</button>
+                <button class="clip-btn" id="clip-instagram">Instagram</button>
+            </div>
+
+            <div id="clip-results"></div>
+        </div>
+
+        <div id="history">
+            <h2>History</h2>
+            <button id="clear-history-btn">Clear History</button>
+            <ul id="history-list"></ul>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="/static/script.js?v=5"></script>
+    </div>
+</body>
+</html>
