@@ -30,15 +30,16 @@ from transcript_intake import (
     YouTubeTranscriptApiAdapter,
 )
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
+
+load_dotenv(BASE_DIR / ".env")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 APP_PASSWORD = os.getenv("APP_PASSWORD")
 SESSION_SECRET = os.getenv("SESSION_SECRET")
 SESSION_COOKIE = "podscribe_session"
 SESSION_TTL_SECONDS = 60 * 60 * 24 * 30
 PUBLIC_PATHS = {"/", "/health", "/login", "/logout"}
-BASE_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = BASE_DIR.parent / "frontend"
 ai_generation = AIGeneration(OpenRouterAdapter(api_key=OPENROUTER_API_KEY))
 transcript_intake = TranscriptIntake(YouTubeTranscriptApiAdapter())
 

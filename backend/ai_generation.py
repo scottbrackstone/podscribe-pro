@@ -121,7 +121,7 @@ class SummaryResult:
 @dataclass
 class OpenRouterAdapter:
     api_key: str | None
-    model: str = "deepseek/deepseek-chat-v3-0324"
+    model: str = "deepseek/deepseek-v4-flash"
     endpoint: str = "https://openrouter.ai/api/v1/chat/completions"
     timeout_seconds: int = 60
 
