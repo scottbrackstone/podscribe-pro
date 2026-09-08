@@ -16,13 +16,13 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 from pydantic import BaseModel
 
-from ai_generation import (
+from .ai_generation import (
     AIGeneration,
     AIGenerationError,
     InvalidGenerationRequest,
     OpenRouterAdapter,
 )
-from transcript_intake import (
+from .transcript_intake import (
     TranscriptDependencyError,
     TranscriptFetchError,
     TranscriptIntake,
