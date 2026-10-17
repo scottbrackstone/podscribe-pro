@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, constr
 
 from .ai_generation import (
     AIGeneration,
@@ -29,6 +29,7 @@ from .transcript_intake import (
     TranscriptIntakeError,
     YouTubeTranscriptApiAdapter,
 )
+from .model_catalog import ModelCatalog, configured_default_model
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
@@ -41,6 +42,7 @@ SESSION_COOKIE = "podscribe_session"
 SESSION_TTL_SECONDS = 60 * 60 * 24 * 30
 PUBLIC_PATHS = {"/", "/health", "/login", "/logout"}
 ai_generation = AIGeneration(OpenRouterAdapter(api_key=OPENROUTER_API_KEY))
+model_catalog = ModelCatalog(api_key=OPENROUTER_API_KEY)
 transcript_intake = TranscriptIntake(YouTubeTranscriptApiAdapter())
 
 app = FastAPI(title="PodScribe Pro", description="AI-powered podcast summarizer")
@@ -304,7 +306,9 @@ class TranscriptRequest(BaseModel):
 
 
 @app.get("/")
-def read_root():
+def read_root(request: Request):
+    if wants_html(request):
+        return RedirectResponse(url="/app", status_code=303)
     return {"message": "Hello, PodScribe! The API is working."}
 
 
@@ -354,6 +358,136 @@ class ClipWiseRequest(BaseModel):
     platform: str = "all"
     approach: str = "curious_student"
     tone: str | None = None
+
+
+class StrictModel(BaseModel):
+    class Config:
+        extra = "forbid"
+
+
+class SourceMetadata(StrictModel):
+    title: str = Field(default="", max_length=300)
+    creator: str = Field(default="", max_length=200)
+    url: str = Field(default="", max_length=2000)
+    credit: bool = False
+
+
+class InterviewAnswer(StrictModel):
+    question: str = Field(max_length=300)
+    answer: str = Field(default="", max_length=1500)
+
+
+class VoiceProfile(StrictModel):
+    bio: str = Field(default="", max_length=1000)
+    guidance: str = Field(default="", max_length=2000)
+    avoid_phrases: list[constr(max_length=100)] = Field(default_factory=list, max_items=20)
+    examples: list[constr(max_length=2200)] = Field(default_factory=list, max_items=8)
+    interview: list[InterviewAnswer] = Field(default_factory=list, max_items=8)
+
+
+class AngleInput(StrictModel):
+    id: str = Field(min_length=1, max_length=100)
+    title: str = Field(min_length=1, max_length=200)
+    hook: str = Field(min_length=1, max_length=600)
+    lens: str = Field(min_length=1, max_length=800)
+    grounding: str = Field(min_length=1, max_length=800)
+
+
+class AnglesRequest(StrictModel):
+    transcript: str = Field(min_length=1, max_length=250000)
+    my_take: str = Field(default="", max_length=2000)
+    source: SourceMetadata = Field(default_factory=SourceMetadata)
+    profile: VoiceProfile = Field(default_factory=VoiceProfile)
+    stance: str = "curious"
+
+
+class PackRequest(AnglesRequest):
+    angle: AngleInput
+    model: str = Field(default_factory=configured_default_model, min_length=1, max_length=200)
+
+
+class ReviseRequest(StrictModel):
+    pack: dict
+    instruction: str = Field(min_length=1, max_length=1000)
+    model: str = Field(min_length=1, max_length=200)
+    profile: VoiceProfile = Field(default_factory=VoiceProfile)
+    angle: AngleInput | None = None
+
+
+def public_model_result(result: dict) -> dict:
+    catalog = model_catalog.get_models()
+    model_id = result["generation"]["model_id"]
+    metadata = next((item for item in catalog["models"] if item["id"] == model_id), None)
+    usage = result["generation"]["usage"]
+    estimated = None
+    if metadata and metadata["input_price_per_million"] is not None and metadata["output_price_per_million"] is not None:
+        estimated = round(
+            usage["prompt_tokens"] * metadata["input_price_per_million"] / 1_000_000
+            + usage["completion_tokens"] * metadata["output_price_per_million"] / 1_000_000,
+            6,
+        )
+    result["generation"].update({
+        "model_name": metadata["name"] if metadata else model_id,
+        "estimated_cost_usd": estimated,
+    })
+    return result
+
+
+@app.get("/clipwise/models")
+def clipwise_models():
+    return model_catalog.get_models()
+
+
+@app.post("/clipwise/angles")
+def clipwise_angles(request: AnglesRequest):
+    try:
+        return public_model_result(ai_generation.generate_angles(
+            request.transcript,
+            my_take=request.my_take,
+            source=request.source.dict(),
+            profile=request.profile.dict(),
+            stance=request.stance,
+        ))
+    except InvalidGenerationRequest as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except AIGenerationError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/clipwise/pack")
+def clipwise_pack(request: PackRequest):
+    try:
+        return public_model_result(ai_generation.generate_pack(
+            request.transcript,
+            angle=request.angle.dict(),
+            model=request.model,
+            allowed_models=model_catalog.allowed_model_ids(),
+            my_take=request.my_take,
+            source=request.source.dict(),
+            profile=request.profile.dict(),
+            stance=request.stance,
+        ))
+    except InvalidGenerationRequest as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except AIGenerationError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@app.post("/clipwise/revise")
+def clipwise_revise(request: ReviseRequest):
+    try:
+        return public_model_result(ai_generation.revise_pack(
+            pack=request.pack,
+            instruction=request.instruction,
+            model=request.model,
+            allowed_models=model_catalog.allowed_model_ids(),
+            profile=request.profile.dict(),
+            angle=request.angle.dict() if request.angle else None,
+        ))
+    except (InvalidGenerationRequest, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except AIGenerationError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @app.post("/clipwise")

@@ -1,69 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PodScribe Pro</title>
-    <link rel="stylesheet" href="/static/style.css?v=4" />
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-</head>
-<body>
-    <div class="container">
-
-        <h1>PodScribe Pro</h1>
-        <p class="subtitle">Paste your podcast transcript below and get an AI summary instantly.</p>
-
-        <textarea id="transcript" placeholder="Paste your transcript here..."></textarea>
-
-        <select id="style">
-            <option value="concise" title="3-5 sentences. The quick gist for when you only have 30 seconds.">Concise</option>
-            <option value="detailed" title="Full breakdown of every major point with context and detail.">Detailed</option>
-            <option value="takeaways" title="Actionable insights and key lessons worth remembering from this episode.">Key Takeaways</option>
-        </select>
-
-        <button id="summarise-btn">Summarise</button>
-        <button id="stop-btn" disabled>Stop</button>
-
-        <div id="result">
-            <h2>Summary</h2>
-            <p id="summary-text">Your summary will appear here.</p>
-            <p id="word-count"></p>
-        </div>
-
-        <!-- ClipWise Section -->
-        <div id="clipwise" style="display:none;">
-            <h2>ClipWise <span class="beta-tag">BETA</span></h2>
-            <p class="subtitle">Turn this into posts that sound like you learning in public.</p>
-
-            <div class="tone-slider-wrap">
-                <div class="tone-labels">
-                    <span>Quiet</span>
-                    <span>Curious</span>
-                    <span>Builder</span>
-                    <span>Connect</span>
-                    <span>Opinion</span>
-                </div>
-                <input type="range" id="approach-slider" min="0" max="4" step="1" value="1" />
-            </div>
-
-            <div class="clipwise-buttons">
-                <button class="clip-btn" id="clip-all">Generate All</button>
-                <button class="clip-btn" id="clip-x">X</button>
-                <button class="clip-btn" id="clip-threads">Threads</button>
-                <button class="clip-btn" id="clip-instagram">Instagram</button>
-            </div>
-
-            <div id="clip-results"></div>
-        </div>
-
-        <div id="history">
-            <h2>History</h2>
-            <button id="clear-history-btn">Clear History</button>
-            <ul id="history-list"></ul>
-        </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <script src="/static/script.js?v=5"></script>
-    </div>
-</body>
-</html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PodScribe Pro · Content Studio</title><link rel="stylesheet" href="/static/style.css?v=7"><link rel="icon" type="image/svg+xml" href="/static/favicon.svg"></head>
+<body><header class="topbar"><a class="brand" href="/app"><span class="brand-mark">P</span>PodScribe Pro</a><div class="top-actions"><span id="save-status">Saved locally</span><button class="ghost compact" id="history-toggle">Recent packs</button><a href="/logout">Lock</a></div></header>
+<main class="studio">
+<section class="hero"><p class="eyebrow">Personal content studio</p><h1>Find the thought worth sharing.</h1><p>Turn a transcript into grounded ideas, then shape one into a complete social pack in your voice.</p></section>
+<div class="workspace">
+<section class="panel source-panel"><div class="step-heading"><span>01</span><div><h2>Bring the source</h2><p>Paste a transcript or a public YouTube URL.</p></div></div>
+<label for="source-input">Transcript or URL</label><textarea id="source-input" class="source-input" maxlength="250000" placeholder="Paste a transcript, or https://youtube.com/watch?v=..."></textarea><div class="field-row"><span id="source-count">0 characters</span><span>Full transcripts never enter local history</span></div>
+<label for="my-take">My take <span class="optional">optional</span></label><textarea id="my-take" class="short-input" maxlength="2000" placeholder="One rough line is plenty. What surprised you? What do you disagree with? What would you try?"></textarea>
+<details><summary>Source details & credit</summary><div class="details-grid"><label>Title<input id="source-title" maxlength="300" placeholder="Episode or video title"></label><label>Creator<input id="source-creator" maxlength="200" placeholder="Creator or show"></label><label class="wide">Source URL<input id="source-url" maxlength="2000" type="url" placeholder="https://..."></label><label class="check wide"><input id="source-credit" type="checkbox"> Include a natural source credit</label></div></details>
+<details id="voice-details"><summary>Your voice <span class="saved-pill" id="voice-pill">saved on this device</span></summary><div class="profile-fields">
+<div class="voice-intro"><strong>No past posts needed.</strong> Answer a few of these the way you'd text a friend: short, messy, typos and all. The writer copies how you talk, and can mention anything true you say here.</div>
+<div id="interview-list" class="interview-list"></div>
+<div class="voice-meter"><span id="voice-meter-label">Voice strength</span><div class="meter-track"><div class="meter-fill" id="voice-meter-fill"></div></div></div>
+<label>Posts you've published <span class="optional">added when you tap “I posted this”, newest 8 kept</span><textarea id="profile-examples" maxlength="18000" placeholder="Nothing yet. When you post a draft, tap “I posted this” and your final version lands here. Separate posts with a line containing ---"></textarea></label>
+<label>About you <span class="optional">optional, overrides the default bio</span><textarea id="profile-bio" maxlength="1000" placeholder="Learning to code while studying IT online, into AI tools, building toward a business…"></textarea></label>
+<label>Voice notes <span class="optional">optional</span><textarea id="profile-guidance" maxlength="2000" placeholder="e.g. lowercase is fine, a bit dry, never sound like a LinkedIn post"></textarea></label>
+<label>Extra phrases to avoid <span class="optional">comma separated, common AI phrases are already blocked</span><input id="profile-avoid" maxlength="2000" placeholder="synergy, crushing it"></label></div></details>
+<fieldset class="stance-picker"><legend>Choose a stance</legend><button data-stance="quiet" type="button">Quiet</button><button class="active" data-stance="curious" type="button">Curious</button><button data-stance="builder" type="button">Builder</button><button data-stance="connect" type="button">Connect</button><button data-stance="opinion" type="button">Opinion</button></fieldset>
+<button class="primary" id="angle-button">Find 3 angles <span>→</span></button><p class="status" id="source-status" role="status"></p></section>
+<section class="panel ideas-panel"><div class="step-heading"><span>02</span><div><h2>Choose the angle</h2><p>Three source-grounded directions, generated with DeepSeek V4 Flash.</p></div></div><div id="angle-empty" class="empty-state"><span>✦</span><p>Your three editorial angles will appear here.</p></div><div id="angle-list" class="angle-list"></div><div id="pack-controls" class="pack-controls hidden"><label for="model-select">Write the pack with</label><select id="model-select"><option>Loading models…</option></select><small id="model-note"></small><button class="primary" id="pack-button">Create content pack <span>→</span></button></div></section>
+</div>
+<section id="output-section" class="panel output-panel hidden"><div class="output-head"><div class="step-heading"><span>03</span><div><h2>Shape and publish</h2><p id="generation-meta">Your editable, platform-ready draft.</p></div></div><div class="output-actions"><button class="ghost" id="copy-all">Copy all</button><button class="ghost" id="export-markdown">Export .md</button></div></div><div class="variant-bar"><div id="variant-tabs"></div><div class="compare-wrap"><select id="compare-model"></select><button class="ghost" id="compare-button">Compare another</button></div></div><nav class="platform-tabs"><button class="active" data-platform="instagram">Instagram</button><button data-platform="x">X</button><button data-platform="threads">Threads</button></nav><div id="pack-editor"></div><div class="revision-bar"><span>Refine</span><button data-revision="Make it shorter while keeping every platform within its required limits.">Shorter</button><button data-revision="Make it punchier, more specific, and less generic.">Punchier</button><button data-revision="Make it more personal using only experiences and opinions already supplied.">More personal</button><button data-revision="Make it sound more like the writer's own words: match their phrasing, sentence length, and level of formality, and remove anything that reads like a generic AI post.">More like me</button><input id="custom-revision" maxlength="1000" placeholder="Or describe a change…"><button id="custom-revision-button">Revise</button></div><p class="status" id="output-status" role="status"></p></section>
+<aside id="history-drawer" class="history-drawer" aria-hidden="true"><div class="drawer-head"><div><p class="eyebrow">On this device</p><h2>Recent packs</h2></div><button class="ghost compact" id="history-close">Close</button></div><div id="history-list"></div><button class="danger-link" id="clear-history">Clear history</button></aside>
+</main><script src="/static/script.js?v=7"></script></body></html>
