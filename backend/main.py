@@ -245,6 +245,16 @@ async def require_private_session(request: Request, call_next):
     return JSONResponse({"detail": "Authentication required"}, status_code=401)
 
 
+@app.middleware("http")
+async def revalidate_frontend_files(request: Request, call_next):
+    # Browsers must check for a new deploy before reusing the app shell or its assets.
+    response = await call_next(request)
+    path = request.url.path
+    if path == "/app" or path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 
